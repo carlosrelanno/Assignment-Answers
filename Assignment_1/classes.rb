@@ -1,6 +1,9 @@
 require 'date'
 
 class SeedStock
+  # SeedStock objects contain information stored in seed_stock_data, and have access to the gene
+  # information through a Gene object contained in @gene.
+  # Also, they possess the plant method, which removes the amount of seeds planted from the @grams_remaining atribute.
   attr_accessor :seed_stock
   attr_accessor :mutant_gene_id
   attr_accessor :last_planted
@@ -34,6 +37,7 @@ end
 
 
 class Gene
+  # Gene objects contain the fields form in gene_information.
   attr_accessor :gene_id
   attr_accessor :gene_name
   attr_accessor :mutant_phenotype
@@ -46,8 +50,38 @@ class Gene
 end
 
 
+class HybridCross
+  # Description
+  attr_accessor :parent1
+  attr_accessor :parent2
+  attr_accessor :chi_sq
+  
+  def initialize(params = {})
+    @parent1 = params.fetch(:parent1, 'unknown')
+    @parent2 = params.fetch(:parent2, 'unknown')
+    @f2_wild = params.fetch(:f2_wild, 'unknown').to_f
+    @f2_p1 = params.fetch(:f2_p1, 'unknown').to_f
+    @f2_p2 = params.fetch(:f2_p2, 'unknown').to_f
+    @f2_p1p2 = params.fetch(:f2_p1p2, 'unknown').to_f
+    
+    # Things to calculate chi-squared
+    total = @f2_wild + @f2_p1 + @f2_p2 + @f2_p1p2
+    exp = total/4
+    @chi_sq = (@f2_wild - exp)**2 +
+             (@f2_p1 - exp)**2 +
+             (@f2_p2 - exp)**2 +
+             (@f2_p1p2 - exp)**2
+    @chi_sq /= exp
+  end  
+end
+
+
 class Database
+  # The database object is capable of extract the information from all three data files and construct three
+  # hashes containing objects for each item. The method write_database will create a new_stock_file with the
+  # performed changes.
   attr_accessor :genes
+  attr_accessor :crosses
   attr_accessor :stock
   
   def initialize(params={})
@@ -60,7 +94,8 @@ class Database
       @genes[item[0].to_sym] = Gene.new(gene_id: item[0],
                                         gene_name: item[1],
                                         mutant_phenotype: item[2])
-    end 
+    end
+    
     # Process seed stock table
     @seed_stock_file = params.fetch(:seed_stock_file)
     @stock = Hash.new()
@@ -74,6 +109,20 @@ class Database
                                              storage:item[3],
                                              grams_remaining: item[4],
                                              gene: @genes[item[1].to_sym])
+    end
+    
+    # Process cross table
+    @cross_file = params.fetch(:cross_file)
+    @crosses = Hash.new() # This will store all cross objects
+    cross_information = IO.readlines(@cross_file)
+    for item in cross_information[1..-1]
+      item = item.chomp.split("\t")
+      @crosses[(item[0].to_s+"_"+item[1].to_s).to_sym] = HybridCross.new(parent1: @stock[item[0].to_sym],
+                                                             parent2: @stock[item[1].to_sym],
+                                                             f2_wild: item[2],
+                                                             f2_p1: item[3],
+                                                             f2_p2: item[4],
+                                                             f2_p1p2: item[5])
     end
   end
   
