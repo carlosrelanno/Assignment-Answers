@@ -27,8 +27,10 @@ class SeedStock
     
     if @grams_remaining > n
       @grams_remaining -= n
-    else
+    elsif @grams_remaining = n
       puts "WARNING: we have run out of Seed Stock #{@seed_stock}"
+    else
+      puts "WARNING: we have run out of Seed Stock #{@seed_stock}. Only #{@grams_remaining}"
       @grams_remaining = 0
     end
     @last_planted = DateTime.now.strftime "%d/%m/%Y" # Set today as the last planted date
@@ -65,13 +67,11 @@ class HybridCross
     @f2_p1p2 = params.fetch(:f2_p1p2, 'unknown').to_f
     
     # Things to calculate chi-squared
-    total = @f2_wild + @f2_p1 + @f2_p2 + @f2_p1p2
-    exp = total/4
-    @chi_sq = (@f2_wild - exp)**2 +
-             (@f2_p1 - exp)**2 +
-             (@f2_p2 - exp)**2 +
-             (@f2_p1p2 - exp)**2
-    @chi_sq /= exp
+    total = @f2_wild + @f2_p1 + @f2_p2 + @f2_p1p2 # Arreglar esto
+    @chi_sq = ((@f2_wild - total * 9/16)**2)/ total * 9/16 +
+              ((@f2_p1 - total * 3/16)**2)/ total * 3/16 +
+              ((@f2_p2 - total * 3/16)**2)/ total * 3/16 +
+              ((@f2_p1p2 - total * 1/16)**2)/total * 1/16
   end  
 end
 
