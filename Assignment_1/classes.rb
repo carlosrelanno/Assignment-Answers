@@ -48,8 +48,16 @@ class Gene
   def initialize(params = {})
     @gene_id = params.fetch(:gene_id, "unknown")
     @gene_name = params.fetch(:gene_name, "unknown")
+    self.check_id(@gene_id)
     @mutant_phenotype = params.fetch(:mutant_phenotype, "unknown")
     @linked = Array.new()
+  end
+  
+  def check_id(id)
+    if not id =~ /A[Tt]\d[Gg]\d\d\d\d\d/
+      puts "Gene ID (#{@gene_id}) from gene #{@gene_name} is not valid.", "Exiting program. Please check spelling."
+      exit   
+    end
   end
 end
 
