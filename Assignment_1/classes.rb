@@ -43,17 +43,21 @@ class Gene
   attr_accessor :gene_id
   attr_accessor :gene_name
   attr_accessor :mutant_phenotype
+  attr_accessor :linked
 
   def initialize(params = {})
     @gene_id = params.fetch(:gene_id, "unknown")
     @gene_name = params.fetch(:gene_name, "unknown")
     @mutant_phenotype = params.fetch(:mutant_phenotype, "unknown")
+    @linked = Array.new()
   end
 end
 
-
 class HybridCross
-  # Description
+  # The HybridCross object contains access to both parent gene objects, and the frequencies of their offspring.
+  # With this data, chi square score is calculated and the pairs with chi_sq > 3,841 (indicating a p value
+  # less than 0.05) are reported as linked. Then, both gene objects will add each other to their 'linked' array
+  # attribute.
   attr_accessor :parent1
   attr_accessor :parent2
   attr_accessor :chi_sq
@@ -66,12 +70,17 @@ class HybridCross
     @f2_p2 = params.fetch(:f2_p2, 'unknown').to_f
     @f2_p1p2 = params.fetch(:f2_p1p2, 'unknown').to_f
     
-    # Things to calculate chi-squared
+    # Things to calculate chi-square
     total = @f2_wild + @f2_p1 + @f2_p2 + @f2_p1p2 # Arreglar esto
     @chi_sq = ((@f2_wild - total * 9/16)**2)/ total * 9/16 +
               ((@f2_p1 - total * 3/16)**2)/ total * 3/16 +
               ((@f2_p2 - total * 3/16)**2)/ total * 3/16 +
               ((@f2_p1p2 - total * 1/16)**2)/total * 1/16
+    if @chi_sq > 3.841
+      puts "Recording: #{@parent1.gene.gene_name} is genetically linked to #{@parent2.gene.gene_name} with chisquare score #{@chi_sq}"
+      @parent1.gene.linked << @parent2.gene
+      @parent2.gene.linked << @parent1.gene
+    end
   end  
 end
 
@@ -133,5 +142,24 @@ class Database
       file.write("#{item.seed_stock}\t#{item.mutant_gene_id}\t#{item.last_planted}\t#{item.storage}\t#{item.grams_remaining}\n")
     end
     file.close
+  end
+  
+  def linkage_report
+    if @genes.values.any? {|gene| gene.linked.any?} # If any gene has any linkage
+      puts "\n--- Gene linkage report ---"
+        for gene in @genes.values
+          if gene.linked.any?
+            for gene2 in gene.linked
+            puts "#{gene.gene_name} is linked to #{gene2.gene_name}"
+            end
+          end
+        end  
+    end 
+  end
+  def get_seed_stock(id) # This is equivalent to call database.stock[:id]. I dont know if this function would be neccessary in this case.
+    return @stock[id.to_sym]
+  end
+  def get_gene(id) # Same but with genes
+    return @genes[id.to_sym]
   end
 end

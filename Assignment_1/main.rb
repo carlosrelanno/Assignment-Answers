@@ -1,7 +1,8 @@
 # Import objects
-require_relative './classes'
+require_relative './classes' # Note: I can not require the classes using the require command
 
 # Database creation
+# Automatically, the linked genes are analysed
 database = Database.new(gene_info_file: "/home/osboxes/Assignment-Answers/Assignment_1/StockDatabaseDataFiles/gene_information.tsv",
                         seed_stock_file: "/home/osboxes/Assignment-Answers/Assignment_1/StockDatabaseDataFiles/seed_stock_data.tsv",
                         cross_file: "/home/osboxes/Assignment-Answers/Assignment_1/StockDatabaseDataFiles/cross_data.tsv")
@@ -12,9 +13,5 @@ for seed in database.stock.values
 end
 database.write_database
 
-for cross in database.crosses.values
-  puts cross.chi_sq
-end
-
-
-  
+# Getting a gene linkage report
+database.linkage_report
