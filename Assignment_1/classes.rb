@@ -24,14 +24,12 @@ class SeedStock
     if n <= 0 # Just to avoid changing the date if planting 0 seeds
       return
     end
-    
-    if @grams_remaining > n
-      @grams_remaining -= n
-    elsif @grams_remaining = n
-      puts "WARNING: we have run out of Seed Stock #{@seed_stock}"
-    else
-      puts "WARNING: we have run out of Seed Stock #{@seed_stock}. Only #{@grams_remaining}"
+    @grams_remaining -= n
+    if @grams_remaining < 0
+      puts "WARNING: we have run out of Seed Stock #{@seed_stock}. Only #{n+@grams_remaining} / #{n} could be planted"
       @grams_remaining = 0
+    elsif @grams_remaining == 0
+      puts "WARNING: we have run out of Seed Stock #{@seed_stock}"
     end
     @last_planted = DateTime.now.strftime "%d/%m/%Y" # Set today as the last planted date
   end   
