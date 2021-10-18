@@ -26,7 +26,7 @@ class SeedStock
     end
     @grams_remaining -= n
     if @grams_remaining < 0
-      puts "WARNING: we have run out of Seed Stock #{@seed_stock}. Only #{n+@grams_remaining} / #{n} could be planted"
+      puts "WARNING: we have run out of Seed Stock #{@seed_stock}. Only #{n+@grams_remaining} / #{n} could be planted."
       @grams_remaining = 0
     elsif @grams_remaining == 0
       puts "WARNING: we have run out of Seed Stock #{@seed_stock}"
@@ -61,9 +61,9 @@ end
 
 class HybridCross
   # The HybridCross object contains access to both parent gene objects, and the frequencies of their offspring.
-  # With this data, chi square score is calculated and the pairs with chi_sq > 3,841 (indicating a p value
-  # less than 0.05) are reported as linked. Then, both gene objects will add each other to their 'linked' array
-  # attribute.
+  # With this data, chi square score is calculated and the pairs with chi_sq > 7.815 (indicating a p value
+  # less than 0.05 for 3 degrees of freedom) are reported as linked. Then, both gene objects will add each
+  # other to their 'linked' array attribute.
   attr_accessor :parent1
   attr_accessor :parent2
   attr_accessor :chi_sq
@@ -78,11 +78,11 @@ class HybridCross
     
     # Things to calculate chi-square
     total = @f2_wild + @f2_p1 + @f2_p2 + @f2_p1p2 # Arreglar esto
-    @chi_sq = ((@f2_wild - total * 9/16)**2)/ total * 9/16 +
-              ((@f2_p1 - total * 3/16)**2)/ total * 3/16 +
-              ((@f2_p2 - total * 3/16)**2)/ total * 3/16 +
-              ((@f2_p1p2 - total * 1/16)**2)/total * 1/16
-    if @chi_sq > 3.841
+    @chi_sq = ((@f2_wild - total * 9/16)**2) / (total * 9/16) +
+              ((@f2_p1 - total * 3/16)**2) / (total * 3/16) +
+              ((@f2_p2 - total * 3/16)**2) / (total * 3/16) +
+              ((@f2_p1p2 - total * 1/16)**2) /(total * 1/16)
+    if @chi_sq > 7.815 # chi square value for a p value < 0.05 with 3 degrees of freedom.
       puts "Recording: #{@parent1.gene.gene_name} is genetically linked to #{@parent2.gene.gene_name} with chisquare score #{@chi_sq}"
       @parent1.gene.linked << @parent2.gene
       @parent2.gene.linked << @parent1.gene
