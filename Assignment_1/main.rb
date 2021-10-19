@@ -15,7 +15,7 @@ database = Database.new(gene_info_file: gene_file,
                         cross_file: cross_file)
 
 # Planting 7 seeds of each seed and updating into new_stock_file.tsv
-for seed in database.stock.values
+database.stock.values.each do |seed|
   seed.plant(7)
 end
 database.write_database(path='./StockDatabaseDataFiles', output_file)
