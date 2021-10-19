@@ -29,7 +29,7 @@ class SeedStock
       puts "WARNING: we have run out of Seed Stock #{@seed_stock}. Only #{n+@grams_remaining} / #{n} could be planted."
       @grams_remaining = 0
     elsif @grams_remaining == 0
-      puts "WARNING: we have run out of Seed Stock #{@seed_stock}"
+      puts "WARNING: we have run out of Seed Stock #{@seed_stock}."
     end
     @last_planted = DateTime.now.strftime "%d/%m/%Y" # Set today as the last planted date
   end   
@@ -104,7 +104,7 @@ class Database
     @gene_info_file = params.fetch(:gene_info_file)
     @genes = Hash.new() # This will store all gene objects
     gene_information = IO.readlines(@gene_info_file)
-    for item in gene_information[1..-1]
+    gene_information[1..-1].each do |item|
       item = item.chomp.split("\t")
       @genes[item[0].to_sym] = Gene.new(gene_id: item[0],
                                         gene_name: item[1],
@@ -116,7 +116,7 @@ class Database
     @stock = Hash.new()
     seed_stock_info = IO.readlines(@seed_stock_file)
     @seed_stock_header = seed_stock_info[0]
-    for item in seed_stock_info[1..-1]
+    seed_stock_info[1..-1].each do |item|
       item = item.chomp.split("\t")
       @stock[item[0].to_sym] = SeedStock.new(seed_stock: item[0],
                                              mutant_gene_id: item[1],
@@ -130,7 +130,7 @@ class Database
     @cross_file = params.fetch(:cross_file)
     @crosses = Hash.new() # This will store all cross objects
     cross_information = IO.readlines(@cross_file)
-    for item in cross_information[1..-1]
+    cross_information[1..-1].each do |item|
       item = item.chomp.split("\t")
       @crosses[(item[0].to_s+"_"+item[1].to_s).to_sym] = HybridCross.new(parent1: @stock[item[0].to_sym],
                                                              parent2: @stock[item[1].to_sym],
@@ -144,19 +144,19 @@ class Database
   def write_database(path, new_file)
     file = File.open(path + "/" + new_file, "w")
     file.write(@seed_stock_header)
-    for item in @stock.values
+    @stock.values.each do |item|
       file.write("#{item.seed_stock}\t#{item.mutant_gene_id}\t#{item.last_planted}\t#{item.storage}\t#{item.grams_remaining}\n")
     end
-    puts "New seed stock saved in #{path + "/" + new_file}"
+    puts "New seed stock file saved in #{path + "/" + new_file}"
     file.close
   end
   
   def linkage_report
     if @genes.values.any? {|gene| gene.linked.any?} # If any gene has any linkage
       puts "\n--- Gene linkage report ---"
-        for gene in @genes.values
+        @genes.values.each do |gene|
           if gene.linked.any?
-            for gene2 in gene.linked
+            gene.linked.each do |gene2|
             puts "#{gene.gene_name} is linked to #{gene2.gene_name}"
             end
           end
