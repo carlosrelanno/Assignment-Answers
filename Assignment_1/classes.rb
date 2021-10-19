@@ -141,12 +141,13 @@ class Database
     end
   end
   
-  def write_database
-    file = File.open(@seed_stock_file.gsub("seed_stock_data", "new_stock_file"), "w")
+  def write_database(path, new_file)
+    file = File.open(path + "/" + new_file, "w")
     file.write(@seed_stock_header)
     for item in @stock.values
       file.write("#{item.seed_stock}\t#{item.mutant_gene_id}\t#{item.last_planted}\t#{item.storage}\t#{item.grams_remaining}\n")
     end
+    puts "New seed stock saved in #{path + "/" + new_file}"
     file.close
   end
   
