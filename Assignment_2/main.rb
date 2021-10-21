@@ -4,5 +4,5 @@ require 'C:\Users\Carlos\Documents\Assignment-Answers\Assignment_2\classes.rb'
 # 2. Get all data from interaction
 # 3. Create connex objects
 
-dog = Dogo.new(name: "osa")
-puts dog, dog.name
+
+puts Tools.get_inter('AT4g05180')
