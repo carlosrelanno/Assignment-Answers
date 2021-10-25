@@ -1,10 +1,8 @@
 require_relative '.\classes.rb'
 
-# 1. Load genes
+# 1. Load genes from file
 gene_list = File.open('Files\ArabidopsisSubNetwork_GeneList.txt', 'r').readlines()
 gene_list = gene_list.map{|x| x.chomp.upcase}
 
-# 2. Get all data from interaction
-# 3. Create connex objects
-
-net = Networker.new(gene_list: gene_list)
+# 2. Start the Networker object
+net = Networker.new(gene_list: gene_list[0,4])
