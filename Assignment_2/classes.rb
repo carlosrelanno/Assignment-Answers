@@ -36,48 +36,50 @@ class Gene
   attr_accessor :id
   attr_accessor :interactions
   attr_accessor :level
+  attr_accessor :go 
+  attr_accessor :kegg_pathways
 
   def initialize(params={})
     @id = params.fetch(:id, false)
     @level = params.fetch(:level)
     @threshold = params.fetch(:threshold)
-    @kegg_pathways = ''
-    # @go
+    @kegg_pathways = Hash.new
+    @go = Hash.new
     @interactions = Array.new
     get_interactions
-    clean_interactions
   end
 
   def get_interactions
     inter = Tools.get_inter(@id)
     inter.each do |i|
       id1uni, id2uni, c, d, id1, id2, *rest, score = i.split("\t")
+      score = score.match(/\d+.\d+/).to_s
+      if score.to_f < @threshold
+        next
+      end
       id1 = id1.match(/A[Tt]\d[Gg]\d\d\d\d\d/).to_s.upcase
       id2 = id2.match(/A[Tt]\d[Gg]\d\d\d\d\d/).to_s.upcase
-      score = score.match(/\d+.\d+/).to_s
       if id1.upcase != @id.upcase # Some gene positions in intact are swapped
           id1, id2 = id2, id1
       end
-      @interactions << [@id, id2, score]
+      if id1 == id2 or id2 == "" # Dont save this interaction if its with itself or with a non Arabidopsis gene
+        next
+      end
+      @interactions |= [[@id, id2, score]]
     end
-  end
-
-  def clean_interactions
-    @interactions.select! {|i| i[1] != ""} # Select all interactions that contain an arabidopsis gene
-    @interactions.uniq! # remove duplicated interactions
-    @interactions.select! {|i| i[1] != @id} # remove autointeractions
-    @interactions.select! {|1| i[2] > @threshold}
   end
 
   def get_kegg
     data = Tools.fetch("http://togows.org/entry/kegg-genes/ath:#{@id}/pathways.json")
     data = JSON.parse(data)
-    @kegg_pathways = data
+    @kegg_pathways = data[0]
   end
 
   def get_go
-    # data = Tools.fetch("http://togows.org/entry/kegg-genes/ath:#{@id}/pathways.json")
-    # data = JSON.parse(data)
+    data = Tools.fetch("http://togows.org/entry/ebi-uniprot/#{@id}/dr.json")
+    data = JSON.parse(data)
+    data = data[0]['GO']
+    data.each {|g| @go[g[0]] = g[1].to_s}
   end
 end
 
@@ -86,6 +88,8 @@ class InteractionNetwork
   attr_accessor :interactions
   attr_accessor :original_genes
   attr_accessor :lvl1_interactions
+  attr_accessor :go_annotations
+  attr_accessor :kegg_annotations
   def initialize(params={})
     @original_list = params.fetch(:original_list)
     @all_genes = params.fetch(:all_genes)
@@ -95,6 +99,8 @@ class InteractionNetwork
     @original_genes = @genes.select {|g| g.level == 1}
     @lvl1_interactions= Array.new
     get_level1_interactions
+    @go_annotations = Hash.new
+    @kegg_annotations = Hash.new
   end
 
   def get_genes
@@ -124,15 +130,22 @@ class InteractionNetwork
       progress_mark: ' ',
       remainder_mark: "\u{FF65}",
       total: @genes.length)
-    @genes.each {|gene| gene.get_kegg
-                        gene.get_go
-                        progressbar.increment}
+    @genes.each do |gene| 
+      gene.get_kegg
+      @kegg_annotations.merge!(gene.kegg_pathways)
+      gene.get_go
+      @go_annotations.merge!(gene.go)
+      progressbar.increment
     end
+    @kegg_annotations.sort.to_h
+    @go_annotations.sort.to_h
+  end
 end
 
 class Networker
   def initialize(params={})
     @gene_list = params.fetch(:gene_list)
+    @depth = params.fetch(:depth)
     @genes = Array.new
     @interactions = Array.new
     @networks = Array.new
@@ -140,6 +153,7 @@ class Networker
 
     # Load genes from the original list
     puts "Initializing network constructor with #{@gene_list.length} genes..."
+    puts "Depth: #{@depth}, interaction score threshold: #{@threshold}"
     puts "Loading 1st level interactions..."
     load_genes(@gene_list, level=1) 
     @genes.select! {|g| g.interactions.any?}
@@ -147,24 +161,32 @@ class Networker
     puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
 
     # Load and process genes from the second level
-    second_level_genes = @interactions.transpose[1]
-    second_level_genes.uniq!
-    puts "Loading 2nd level interactions..."
-    load_genes(second_level_genes, level=2)
-    @genes.select! {|g| g.interactions.any?}
-    @genes.uniq!
-    load_interactions(@genes.select {|g| g.level == 2})
-    puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
+    if @depth > 1
+      second_level_genes = @interactions.transpose[1]
+      if second_level_genes.nil?
+        puts "No genes with valid interactions were found. Exiting program."
+        exit 
+      end
+      second_level_genes.uniq!
+      puts "Loading 2nd level interactions..."
+      load_genes(second_level_genes, level=2)
+      @genes.select! {|g| g.interactions.any?}
+      @genes.uniq!
+      load_interactions(@genes.select {|g| g.level == 2})
+      puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
+    end
 
     #Load and process genes from the third level
-    third_level_genes = (@interactions.transpose[1] - @gene_list) - second_level_genes
-    third_level_genes.uniq!
-    puts "Loading 3rd level interactions..."
-    load_genes(third_level_genes, level=3)
-    @genes.select! {|g| g.interactions.any?}
-    @genes.uniq!
-    load_interactions(@genes.select {|g| g.level == 3})
-    puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
+    if @depth > 2
+      third_level_genes = (@interactions.transpose[1] - @gene_list) - second_level_genes
+      third_level_genes.uniq!
+      puts "Loading 3rd level interactions..."
+      load_genes(third_level_genes, level=3)
+      @genes.select! {|g| g.interactions.any?}
+      @genes.uniq!
+      load_interactions(@genes.select {|g| g.level == 3})
+      puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
+    end
 
     # Cleaning...
     puts "Starting with #{@genes.length} genes from 3 levels"
@@ -197,6 +219,7 @@ class Networker
     # Annotate networks
     puts "Annotating..."
     @networks.each{|n| n.annotate}
+    save_report
   end  
 
   def load_genes(list, level)
@@ -267,12 +290,13 @@ class Networker
     file = File.open('Files\report.txt', 'w')
     time = Time.new
     file << "GENE INTERACTION NETWORK REPORT\n\n"
-    file << "Date: #{time.strftime("%d/%m/%Y")}\n"
+    file << "Date: #{time.strftime("%d/%m/%Y  %k:%M")}\n"
     file << "Number of genes in the original list: #{@gene_list.length}\n"
-    file << "Depth level for analysis: 3\n\n"
+    file << "Interaction score threshold: #{@threshold}\n"
+    file << "Depth level for analysis: #{@depth}\n\n"
     direct_interactions = Array.new
     @networks.each {|n| direct_interactions += n.lvl1_interactions}
-    file << "Genes interacting directly: #{direct_interactions.length}"
+    file << "Genes interacting directly: #{direct_interactions.length}\n"
     if direct_interactions.any?
       direct_interactions.each {|i| file << "#{i[0]} interacts with #{i[1]} with score #{i[2]}\n"}
     end
@@ -280,12 +304,21 @@ class Networker
     if @networks.any?
       @networks.each do |n|
         file << "--------------------\n"
-        file << "Network involving #{n.genes.length} genes and #{n.interactions.length} interactions. Contains #{n.original_genes.length} original genes.\n"
+        file << "Network involving #{n.genes.length} genes and #{n.interactions.length} interactions. Contains #{n.original_genes.length} original gene(s).\n"
         if n.original_genes.any?
           file << "Original genes inside:\n"
           n.original_genes.each {|g| file << g.id + "\n"}
         end
+        if n.kegg_annotations.any?
+          file << "\nKEGG annotations for this network:\n"
+          n.kegg_annotations.keys.each {|k| file << "#{k}\t#{n.kegg_annotations[k]}\n"}
+        end
+        if n.go_annotations.any?
+          file << "\nGene ontology terms for this network:\n"
+          n.go_annotations.keys.each {|k| file << "#{k}\t#{n.go_annotations[k]}\n"}
+        end
       end
+      file << "--------------------\n"
     end
     file.close
   end

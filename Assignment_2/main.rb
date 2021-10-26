@@ -5,4 +5,4 @@ gene_list = File.open('Files\ArabidopsisSubNetwork_GeneList.txt', 'r').readlines
 gene_list = gene_list.map{|x| x.chomp.upcase}
 
 # 2. Start the Networker object
-net = Networker.new(gene_list: gene_list[0,6], threshold: 0.40)
+net = Networker.new(gene_list: gene_list, threshold: 0.5, depth: 3)
