@@ -40,6 +40,7 @@ class Gene
   def initialize(params={})
     @id = params.fetch(:id, false)
     @level = params.fetch(:level)
+    @threshold = params.fetch(:threshold)
     @kegg_pathways = ''
     # @go
     @interactions = Array.new
@@ -65,6 +66,7 @@ class Gene
     @interactions.select! {|i| i[1] != ""} # Select all interactions that contain an arabidopsis gene
     @interactions.uniq! # remove duplicated interactions
     @interactions.select! {|i| i[1] != @id} # remove autointeractions
+    @interactions.select! {|1| i[2] > @threshold}
   end
 
   def get_kegg
@@ -83,12 +85,16 @@ class InteractionNetwork
   attr_accessor :genes
   attr_accessor :interactions
   attr_accessor :original_genes
+  attr_accessor :lvl1_interactions
   def initialize(params={})
+    @original_list = params.fetch(:original_list)
     @all_genes = params.fetch(:all_genes)
     @interactions = params.fetch(:interactions)
     @genes = Array.new
     get_genes
     @original_genes = @genes.select {|g| g.level == 1}
+    @lvl1_interactions= Array.new
+    get_level1_interactions
   end
 
   def get_genes
@@ -100,6 +106,16 @@ class InteractionNetwork
     gene_names.uniq!
     gene_names.each do |name|
       @genes << @all_genes.select{|g| g.id == name}[0]
+    end
+  end
+
+  def get_level1_interactions
+    if @original_genes.any?
+      @interactions.each do |i|
+        if @original_list.include? i[0] and @original_list.include? i[1]
+          @lvl1_interactions << i
+        end
+      end
     end
   end
 
@@ -120,6 +136,7 @@ class Networker
     @genes = Array.new
     @interactions = Array.new
     @networks = Array.new
+    @threshold = params.fetch(:threshold)
 
     # Load genes from the original list
     puts "Initializing network constructor with #{@gene_list.length} genes..."
@@ -169,14 +186,14 @@ class Networker
       unless @networks.any? {|n| n.genes.any? {|g| g.id == gene.id}}
         connex = Array.new
         connect(gene, connex)
-        network = InteractionNetwork.new(interactions: connex, all_genes: @genes)
+        network = InteractionNetwork.new(interactions: connex, all_genes: @genes, original_list: @gene_list)
         @networks << network
       end
     end
     @networks.select! {|n| n.genes.length > 0}
     puts "\n-----Results-----"
     @networks.each {|n| puts "Network involving #{n.genes.length} genes and #{n.interactions.length} interactions.\nContains #{n.original_genes.length} genes from the original #{@gene_list.length}-genes group\n-----------------\n"}
-  
+    save_report
     # Annotate networks
     puts "Annotating..."
     @networks.each{|n| n.annotate}
@@ -188,9 +205,10 @@ class Networker
       remainder_mark: "\u{FF65}",
       total: list.length)
     list.each do |gene|
-      obj = Gene.new(id: gene, all_genes: @gene_list, level: level)
+      obj = Gene.new(id: gene, all_genes: @gene_list, level: level, threshold: @threshold)
       @genes << obj
       progressbar.increment
+    end
   end
 
   def load_interactions(genes)
@@ -202,7 +220,7 @@ class Networker
       end
     end
   end
-  
+
   def save_interactions
     file = File.open('Files\net_interactions.txt', 'w')
     @interactions.each do |i|
@@ -244,5 +262,31 @@ class Networker
       connect(gene2, net)
     end
   end
-end
+
+  def save_report
+    file = File.open('Files\report.txt', 'w')
+    time = Time.new
+    file << "GENE INTERACTION NETWORK REPORT\n\n"
+    file << "Date: #{time.strftime("%d/%m/%Y")}\n"
+    file << "Number of genes in the original list: #{@gene_list.length}\n"
+    file << "Depth level for analysis: 3\n\n"
+    direct_interactions = Array.new
+    @networks.each {|n| direct_interactions += n.lvl1_interactions}
+    file << "Genes interacting directly: #{direct_interactions.length}"
+    if direct_interactions.any?
+      direct_interactions.each {|i| file << "#{i[0]} interacts with #{i[1]} with score #{i[2]}\n"}
+    end
+    file << "\nFound networks: #{@networks.length}\n"
+    if @networks.any?
+      @networks.each do |n|
+        file << "--------------------\n"
+        file << "Network involving #{n.genes.length} genes and #{n.interactions.length} interactions. Contains #{n.original_genes.length} original genes.\n"
+        if n.original_genes.any?
+          file << "Original genes inside:\n"
+          n.original_genes.each {|g| file << g.id + "\n"}
+        end
+      end
+    end
+    file.close
+  end
 end
