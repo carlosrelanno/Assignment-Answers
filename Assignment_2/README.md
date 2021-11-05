@@ -1,4 +1,4 @@
-# Gene interacion network builder
+# Gene interaction network builder
 For Bioinformatics Programming Challenges, 2021
 
 ## Description
