@@ -12,41 +12,32 @@ class Networker
       @interactions = Array.new
       @networks = Array.new
       @threshold = params.fetch(:threshold)
+      @all_annotations = params.fetch(:all_annotations, true)
   
       # Load genes from the original list
       puts "Initializing network constructor with #{@gene_list.length} genes..."
       puts "Depth: #{@depth}, interaction score threshold: #{@threshold}"
-      puts "Loading 1st level interactions..."
+      puts "Loading level 1 interactions..."
       load_genes(@gene_list, level=1) 
       @genes.select! {|g| g.interactions.any?}
       load_interactions(@genes) # Get all interactions
       puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
-  
-      # Load and process genes from the second level
-      if @depth > 1
-        second_level_genes = @interactions.transpose[1]
-        if second_level_genes.nil?
-          puts "No genes with valid interactions were found. Exiting program."
-          exit 
-        end
-        second_level_genes.uniq!
-        puts "Loading 2nd level interactions..."
-        load_genes(second_level_genes, level=2)
-        @genes.select! {|g| g.interactions.any?}
-        @genes.uniq!
-        load_interactions(@genes.select {|g| g.level == 2})
-        puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
+      if @interactions.nil? or @interactions.length == 0
+        puts "No genes with valid interactions were found. Exiting program."
+        exit
       end
-  
-      #Load and process genes from the third level
-      if @depth > 2
-        third_level_genes = (@interactions.transpose[1].uniq! - @gene_list) - second_level_genes
-        third_level_genes.uniq!
-        puts "Loading 3rd level interactions..."
-        load_genes(third_level_genes, level=3)
-        @genes.select! {|g| g.interactions.any?}
-        @genes.uniq!
-        load_interactions(@genes.select {|g| g.level == 3})
+
+      # Get next level genes and interactions
+      (2..@depth).each do |level|
+        gene_names = @genes.map{|g| g.id}.to_a
+        n_level_genes = @interactions.transpose[1].uniq - gene_names
+        if n_level_genes.nil?
+          puts "No more genes were found at level #{level}."
+        end
+        puts "Loading level #{level} interactions..."
+        load_genes(n_level_genes, level=level)
+        @genes.select!{|g| g.interactions.any?}
+        load_interactions(@genes.select {|g| g.level == level})
         puts "Found: #{@interactions.length} unique interactions from #{@genes.length} genes"
       end
   
@@ -54,16 +45,13 @@ class Networker
       puts "Starting with #{@genes.length} genes from #{@depth} level(s)"
       # remove the interactions that occur with genes that are not in the first and second levels
       clean_genes
-      # Eliminate second and third level genes with just an interaction
-      @genes = @genes.reject {|g| g.level == 2 and g.interactions.length < 2} 
-      @genes.reject! {|g| g.level == 3 and g.interactions.length < 2} 
+      # Eliminate n level genes with just an interaction
+      (2..@depth).each do |level|
+        @genes.reject! {|g| g.level == level and g.interactions.length < 2}
+      end
       @genes = @genes.sort_by {|g| -g.interactions.length}
       clean_genes
       puts "Cleaned! #{@genes.length} genes remaining"
-      ay = File.open('Files\ups.txt', 'w')
-      @genes.each {|g| ay << g.id + "\t" + g.level.to_s + "\t" + g.interactions.length.to_s + "\n"}
-      ay.close
-      #exit
   
       # Network construction
       puts "Constructing networks..."
@@ -78,14 +66,15 @@ class Networker
         end
       end
       @networks.select! {|n| n.genes.length > 1}
+      @networks.select! {|n| n.original_genes.length > 1}
       @networks.uniq!(&:genes)
       puts "\n-----Results-----"
       @networks.each {|n| puts "Network involving #{n.genes.length} genes and #{n.interactions.length} interactions.\nContains #{n.original_genes.length} genes from the original #{@gene_list.length}-genes group\n-----------------\n"}
       save_report
-      #exit # HEY
+      
       # Annotate networks
       puts "Annotating..."
-      @networks.each{|n| n.annotate}
+      @networks.each{|n| n.annotate(all=@all_annotations)}
       save_report
     end  
   
@@ -110,23 +99,7 @@ class Networker
         end
       end
     end
-  
-    def save_interactions
-      file = File.open('Files\net_interactions.txt', 'w')
-      @interactions.each do |i|
-        file << "#{i[0]}\t#{i[1]}\t#{i[2]}\n"
-      end
-      file.close
-    end
-  
-    def save_genes
-      file = File.open('Files\net_genes.txt', 'w')
-      @genes.each do |g|
-        file << "#{g.id}\n"
-      end
-      file.close
-    end
-  
+      
     def clean_genes
       gene_names = Array.new
       @genes.each {|g| gene_names << g.id} # Create a record with all gene_names
@@ -159,7 +132,12 @@ class Networker
       file << "Date: #{time.strftime("%d/%m/%Y  %k:%M")}\n"
       file << "Number of genes in the original list: #{@gene_list.length}\n"
       file << "Interaction score threshold: #{@threshold}\n"
-      file << "Depth level for analysis: #{@depth}\n\n"
+      file << "Depth level for analysis: #{@depth}\n"
+      if @all_annotations
+        file << "Annotating all genes from the network, including non original ones.\n\n"
+      else 
+        file << "Annotating just the original list genes from the network.\n\n"
+      end
       direct_interactions = Array.new
       @networks.each {|n| direct_interactions += n.lvl1_interactions}
       file << "Genes from the list interacting directly: #{direct_interactions.length}\n"

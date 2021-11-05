@@ -18,8 +18,6 @@ class InteractionNetwork
       get_level1_interactions
       @go_annotations = Hash.new
       @kegg_annotations = Hash.new
-      # gene_name = @genes.map {|g| g.id}.to_a
-      # puts gene_name.length == gene_name.uniq!.length
     end
   
     def get_genes
@@ -45,12 +43,17 @@ class InteractionNetwork
       end
     end
   
-    def annotate
+    def annotate(all=true)
+      if all
+        to_annotate = @genes
+      else
+        to_annotate = @genes.select{|g| g.level == 1}
+      end
       progressbar = ProgressBar.create(format: "%a %b\u{15E7}%i %p%% %t",
         progress_mark: ' ',
         remainder_mark: "\u{FF65}",
-        total: @genes.length)
-      @genes.each do |gene| 
+        total: to_annotate.length)
+      to_annotate.each do |gene| 
         gene.get_kegg
         gene.get_go
         unless gene.kegg_pathways.nil?
