@@ -3,6 +3,7 @@ For Bioinformatics Programming Challenges, 2021
 
 ## Description
 This program tries to find the interaction networks that link genes from an input file. It will also annotate the found networks using both KEGG and GO pathways. The results are saved in the `Files\report.txt` file.
+
 This program uses a progressbar to bring some calm to the waiting user. I chose `ruby-progressbar` by thekompanee, jfelchner. [Documentation and intallation.](https://rubygems.org/gems/ruby-progressbar/versions/1.8.1?locale=es)
 ## Usage
 The `Networker` is the main component of this program. It accepts multiple arguments when creating an instance:
