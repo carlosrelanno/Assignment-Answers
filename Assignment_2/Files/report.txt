@@ -1,7 +1,7 @@
 GENE INTERACTION NETWORK REPORT
 
-Date: 05/11/2021  18:04
-Number of genes in the original list: 40
+Date: 05/11/2021  18:18
+Number of genes in the original list: 168
 Interaction score threshold: 0.45
 Depth level for analysis: 2
 Annotating just the original list genes from the network.
@@ -10,27 +10,57 @@ Genes from the list interacting directly: 0
 
 Found networks: 1
 --------------------
-Network involving 17 genes and 49 interactions. Contains 3 original genes.
+Network involving 49 genes and 137 interactions. Contains 10 original genes.
 Original genes inside:
 AT1G03130
+AT1G14280
+AT1G37130
+AT1G71030
+AT1G76080
+AT4G02770
 AT4G09650
 AT4G17460
+AT5G15850
+AT5G17300
 
 KEGG annotations for this network:
 ath00195	Photosynthesis
 ath01100	Metabolic pathways
+ath00910	Nitrogen metabolism
 ath00190	Oxidative phosphorylation
 
 Gene ontology terms for this network:
 GO:0015979	P:photosynthesis
+GO:0048366	P:leaf development
+GO:0009638	P:phototropism
+GO:0009585	P:red, far-red light phototransduction
+GO:0042128	P:nitrate assimilation
+GO:0006809	P:nitric oxide biosynthetic process
+GO:0009635	P:response to herbicide
+GO:0009416	P:response to light stimulus
+GO:0009610	P:response to symbiotic fungus
+GO:0009718	P:anthocyanin-containing compound biosynthetic process
+GO:0010023	P:proanthocyanidin biosynthetic process
+GO:0030154	P:cell differentiation
+GO:0045454	P:cell redox homeostasis
+GO:0006979	P:response to oxidative stress
+GO:0009414	P:response to water deprivation
+GO:0140547	P:acquisition of seed longevity
+GO:0035556	P:intracellular signal transduction
 GO:0015986	P:ATP synthesis coupled proton transport
 GO:0042742	P:defense response to bacterium
 GO:0009773	P:photosynthetic electron transport in photosystem I
 GO:0009772	P:photosynthetic electron transport in photosystem II
 GO:0009409	P:response to cold
-GO:0035556	P:intracellular signal transduction
 GO:0003006	P:developmental process involved in reproduction
 GO:0010582	P:floral meristem determinacy
 GO:0080127	P:fruit septum development
 GO:0048467	P:gynoecium development
+GO:0009909	P:regulation of flower development
+GO:0000398	P:mRNA splicing, via spliceosome
+GO:0009734	P:auxin-activated signaling pathway
+GO:0007623	P:circadian rhythm
+GO:0010600	P:regulation of auxin biosynthetic process
+GO:0006355	P:regulation of transcription, DNA-templated
+GO:0016567	P:protein ubiquitination
 --------------------
