@@ -178,7 +178,7 @@ class Networker
 
     #Load and process genes from the third level
     if @depth > 2
-      third_level_genes = (@interactions.transpose[1] - @gene_list) - second_level_genes
+      third_level_genes = (@interactions.transpose[1].uniq! - @gene_list) - second_level_genes
       third_level_genes.uniq!
       puts "Loading 3rd level interactions..."
       load_genes(third_level_genes, level=3)
@@ -192,12 +192,17 @@ class Networker
     puts "Starting with #{@genes.length} genes from 3 levels"
     # remove the interactions that occur with genes that are not in the first and second levels
     clean_genes
-    # Eliminate second level genes with just an interaction
+    # Eliminate second and third level genes with just an interaction
+    @genes = @genes.reject {|g| g.level == 2 and g.interactions.length < 2} 
     @genes.reject! {|g| g.level == 3 and g.interactions.length < 2} 
     @genes = @genes.sort_by {|g| -g.interactions.length}
     clean_genes
     puts "Cleaned! #{@genes.length} genes remaining"
-    
+    ay = File.open('Files\ups.txt', 'w')
+    @genes.each {|g| ay << g.id + "\t" + g.level.to_s + "\t" + g.interactions.length.to_s + "\n"}
+    ay.close
+    #exit
+
     # Network construction
     puts "Constructing networks..."
     @progressbar = ProgressBar.create(format: "%a %b\u{15E7}%i %p%% %t",
@@ -216,6 +221,7 @@ class Networker
     puts "\n-----Results-----"
     @networks.each {|n| puts "Network involving #{n.genes.length} genes and #{n.interactions.length} interactions.\nContains #{n.original_genes.length} genes from the original #{@gene_list.length}-genes group\n-----------------\n"}
     save_report
+    exit
     # Annotate networks
     puts "Annotating..."
     @networks.each{|n| n.annotate}
