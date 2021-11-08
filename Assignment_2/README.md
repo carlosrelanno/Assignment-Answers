@@ -6,6 +6,8 @@ This program tries to find the interaction networks that link genes from an inpu
 
 This program uses a progressbar to bring some calm to the waiting user. I chose `ruby-progressbar` by thekompanee and jfelchner. [Documentation and intallation.](https://rubygems.org/gems/ruby-progressbar/versions/1.8.1?locale=es)
 ## Usage
+Run it executing: `ruby .\main.rb .\Files\ArabidopsisSubNetwork_GeneList.txt`
+
 The `Networker` is the main component of this program. It accepts multiple arguments when creating an instance:
 * `gene_list`: the list containing the genes to process.
 * `threshold`: interaction score threshold (0 - 1).

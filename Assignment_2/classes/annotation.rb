@@ -2,6 +2,8 @@ require_relative '.\tools.rb'
 require 'json'
 
 class Annotation 
+    # Annotation objects are generated using the locus code of the gene and automatically extract the gene ontology and kegg pathway annotations
+    # for that gene.
     attr_accessor :kegg
     attr_accessor :go
     def initialize(gene_id)

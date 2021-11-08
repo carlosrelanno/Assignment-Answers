@@ -5,6 +5,10 @@ require 'enumerator'
 # Progressbar from jfelchner avaliable at https://github.com/jfelchner/ruby-progressbar
 
 class Networker
+  # The networker object performs all the actions to construct and annotate networks from a given list of genes.
+  # It loads the original gene objects and their interactors up to a specified level. Then, it uses their interactions to construct a series
+  # of networks, and annotates the valid ones. Finally, it writes a report containing all the obtained information.
+
     def initialize(params={})
       @gene_list = params.fetch(:gene_list)
       @depth = params.fetch(:depth)
@@ -45,7 +49,7 @@ class Networker
       puts "Starting with #{@genes.length} genes from #{@depth} level(s)"
       # remove the interactions that occur with genes that are not in the first and second levels
       clean_genes
-      # Eliminate n level genes with just an interaction
+      # Eliminate n level genes with just an interaction (it is the one that links them to the previous level)
       (2..@depth).each do |level|
         @genes.reject! {|g| g.level == level and g.interactions.length < 2}
       end

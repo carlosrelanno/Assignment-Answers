@@ -1,6 +1,10 @@
 require 'ruby-progressbar'
 
 class InteractionNetwork
+  # Interacion network objects are created from an array of connected interactions. When initialized, they get the participating gene objects.
+  # These objects also contain a list of the original genes contained within, and their interactions. When the annotate function is executed,
+  # all genes, or just the original genes in the network (depending on the all_annotations parameter) are annotated and their combined processes
+  # are stored in @kegg_annotations and @go_annotations.
     attr_accessor :genes
     attr_accessor :interactions
     attr_accessor :original_genes

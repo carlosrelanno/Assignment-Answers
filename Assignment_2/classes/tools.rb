@@ -1,6 +1,7 @@
 require 'rest-client'
 
 class Tools
+  # The class tools is a container for functions used to get information from databases
     def self.fetch(url, headers = {accept: "*/*"}, user = "", pass="")
         response = RestClient::Request.execute({
           method: :get,

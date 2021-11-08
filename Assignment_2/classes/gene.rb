@@ -2,6 +2,10 @@ require_relative '.\tools.rb'
 require_relative '.\annotation.rb'
 
 class Gene
+    # Gene objects automatically extract information about their interactions from IntAct. The level of the gene
+    # is tracked in order to identify the original ones and sort them. Some genes (but not all of them, to reduce
+    # computing time) will be annotated executing the annotate function after the networks have been created.
+    # Interactions are stored in the format [gene1, gene2, score]
     attr_accessor :id
     attr_accessor :interactions
     attr_accessor :level
@@ -28,7 +32,7 @@ class Gene
         if id1.upcase != @id.upcase # Some gene positions in intact are swapped
             id1, id2 = id2, id1
         end
-        if id1 == id2 or id2 == "" # Dont save this interaction if its with itself or with a non Arabidopsis gene
+        if id1 == id2 or id2 == "" # Dont save this interaction if it is with itself or with a non Arabidopsis gene
           next
         end
         @interactions |= [[@id, id2, score]]

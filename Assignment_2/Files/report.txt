@@ -1,6 +1,6 @@
 GENE INTERACTION NETWORK REPORT
 
-Date: 08/11/2021  14:19
+Date: 08/11/2021  16:44
 Number of genes in the original list: 168
 Interaction score threshold: 0.45
 Depth level for analysis: 3
