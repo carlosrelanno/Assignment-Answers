@@ -54,18 +54,16 @@ class InteractionNetwork
         remainder_mark: "\u{FF65}",
         total: to_annotate.length)
       to_annotate.each do |gene| 
-        gene.get_kegg
-        gene.get_go
-        unless gene.kegg_pathways.nil?
-          @kegg_annotations.merge!(gene.kegg_pathways)
+        gene.annotate
+        unless gene.annotations.kegg.nil?
+          @kegg_annotations.merge!(gene.annotations.kegg)
         end
-        unless gene.go.nil?
-          @go_annotations.merge!(gene.go)
+        unless gene.annotations.go.nil?
+          @go_annotations.merge!(gene.annotations.go)
         end
         progressbar.increment
       end
       @kegg_annotations.sort_by{|k, v| k.match(/ath(\d+)/).to_s.to_i}
-      @go_annotations.select! {|k, v| v.match(/^P:/)}
       @go_annotations.sort_by{|k, v| k.match(/GO:(\d+)/).to_s.to_i}
     end
   end

@@ -1,19 +1,16 @@
 require_relative '.\tools.rb'
-require 'json'
+require_relative '.\annotation.rb'
 
 class Gene
     attr_accessor :id
     attr_accessor :interactions
     attr_accessor :level
-    attr_accessor :go 
-    attr_accessor :kegg_pathways
+    attr_accessor :annotations
   
     def initialize(params={})
       @id = params.fetch(:id, false)
       @level = params.fetch(:level)
       @threshold = params.fetch(:threshold)
-      @kegg_pathways = Hash.new
-      @go = Hash.new
       @interactions = Array.new
       get_interactions
     end
@@ -37,20 +34,9 @@ class Gene
         @interactions |= [[@id, id2, score]]
       end
     end
-  
-    def get_kegg
-      data = Tools.fetch("http://togows.org/entry/kegg-genes/ath:#{@id}/pathways.json")
-      data = JSON.parse(data)
-      @kegg_pathways = data[0]
-    end
-  
-    def get_go
-      data = Tools.fetch("http://togows.org/entry/ebi-uniprot/#{@id}/dr.json")
-      data = JSON.parse(data)
-      data = data[0]['GO']
-      unless data.nil?
-        data.each {|g| @go[g[0]] = g[1].to_s}
-      end
-    end
+
+    def annotate
+      @annotations = Annotation.new(@id)
   end
+end
   
