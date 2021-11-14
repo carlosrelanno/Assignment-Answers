@@ -5,4 +5,4 @@ For Bioinformatics Programming Challenges, 2021
 Under construction
 
 ## Results
-![Alt text](/assets/files/Arabidopsis_thaliana_219022154_19027528.png)
+![Alt text](Assingment_3/files/Arabidopsis_thaliana_219022154_19027528.png)
