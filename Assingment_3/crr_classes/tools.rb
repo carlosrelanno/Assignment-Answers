@@ -1,7 +1,19 @@
 require 'rest-client'
+# == Tools
+#
+# This class is a collection of tools to use in various assingments
+#
+# == Summary
+# 
+# It contains functions to get data from the web. Used too in assingment 2
+#
 
 class Tools
-  # The class tools is a container for functions used to get information from databases
+
+  # Get the content of a query url
+
+  # @param url [String] the source url
+  # @return [String] the content of the webpage
     def self.fetch(url, headers = {accept: "*/*"}, user = "", pass="")
         response = RestClient::Request.execute({
           method: :get,
@@ -24,8 +36,4 @@ class Tools
           response = false
           return response  # now we are returning 'False', and we will check that with an \"if\" statement in our main code
     end 
-    def self.get_inter(gene)
-        out = self.fetch("http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/interactor/#{gene}?format=tab25")
-        return out.split("\n")
-    end
 end

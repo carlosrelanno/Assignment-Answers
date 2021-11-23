@@ -1,8 +1,28 @@
+# == GffWriter
+#
+# This class allows the user to save gff3 files from the entries in @entries in the format
+# 'Gene name': Bio::EMBL
+#
+# == Summary
+# 
+# The @entries hash can be modified when creating an instance of this object to add the different
+# named entries (Bio::EMBL objects)
+#
+
 class GffWriter
+
+    # Get/Set the different Bio::EMBL objects entries in a hash
+    # @!attribute [rw]
+    # @return [Hash] The entries hash
     attr_accessor :entries
+
+    # Create a new instance of GffWriter
+    
     def initialize
         @entries = Hash.new
     end
+
+    # Save the entries hash into a gff3 file, with feature position relative to each gene
 
     def save_gff
         file = File.new('files\new_features.gff3', 'w')
@@ -31,6 +51,8 @@ class GffWriter
         end
         file.close
     end
+
+    # Save the entries hash into a gff3 file, with genomic feature position
 
     def save_genomic_gff
         file = File.new('files\new_genomic_features.gff3', 'w')

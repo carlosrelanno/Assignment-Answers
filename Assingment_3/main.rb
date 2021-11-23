@@ -1,5 +1,5 @@
-require_relative 'classes/repeat_finder.rb'
-require_relative 'classes/gff_writer.rb'
+require_relative 'crr_lasses/repeat_finder.rb'
+require_relative 'crr_lasses/gff_writer.rb'
 require 'ruby-progressbar'
 
 file = IO.readlines('files\ArabidopsisSubNetwork_GeneList.txt', chomp: true)

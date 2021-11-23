@@ -1,9 +1,32 @@
 require 'bio'
 require_relative '.\tools.rb'
 
+# == RepeatFinder
+# Finds a matching sequence in the exons of a given gene
+#
+# == Summary
+# 
+# These objects take a gene name and retrieve its EMBL file. Then, they seach a given sequence into
+# the exons of that gene, and annotate the corresponding Bio::Sequence object.
+#
+
 class RepeatFinder
+
+    # Get/Set the name of the gene
+    # @!attribute [rw]
+    # @return [String] The name of the gene
     attr_accessor :gene_id
+
+    # Get/Set the Bio::Sequence object associated with the gene
+    # @!attribute [rw]
+    # @return [Bio::Sequence]
     attr_accessor :entry
+
+    # Create a new instance of RepeatFinder
+
+    # @param gene [String] the name of the gene
+    # @param match [String] the sequence to search in its exons
+
     def initialize(params={})
         @gene_id = params.fetch(:gene)
         @search = params.fetch(:match, '')
@@ -19,6 +42,10 @@ class RepeatFinder
         add_features
     end
 
+    # Search in the exons of the gene a given sequence, add all the matches positions to @gene_matches
+
+    # @param search [String] the sequence to search in the exons of this gene
+
     def search_in_exons(search=@search)
         @entry.features.each do |feature|
             next unless feature.feature == 'exon' # Loop only over exons
@@ -33,7 +60,7 @@ class RepeatFinder
             match_datas = seq.seq.to_enum(:scan, /(?=(#{search}))/).map {Regexp.last_match} # Had to do this to get the overlapping matches
             unless match_datas.empty?
                 match_datas.each do |m|
-                    match_rel_start, match_rel_end = m.begin(0) + 1, m.begin(0) + 6 # CAREFUL
+                    match_rel_start, match_rel_end = m.begin(0) + 1, m.begin(0) + 6 
                     if feature.position.include?('complement')
                         match_gene_start = exon_end - match_rel_end + 1
                         match_gene_end = exon_end - match_rel_start + 1
@@ -49,6 +76,11 @@ class RepeatFinder
             end
         end
     end
+
+    # Add the match features to the Bio::Sequence object for the gene
+
+    # @param name [String] the name of the new features
+    # @param positions [Array] the positions for all the instances of this feature, in the format "begin..end"
 
     def add_features(name='kebab_repeat', positions=@gene_matches)
         positions.each do |pos|
