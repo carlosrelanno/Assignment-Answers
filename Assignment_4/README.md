@@ -1,0 +1,1 @@
+Moreno-Hagelsieb G, Latimer K. Choosing BLAST options for better detection of orthologs as reciprocal best hits. Bioinformatics. 2008 Feb 1;24(3):319-24. doi: 10.1093/bioinformatics/btm585. Epub 2007 Nov 26. PMID: 18042555.

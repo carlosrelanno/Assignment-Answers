@@ -12,21 +12,22 @@ puts `[ ! -f Databases/PEP.pin ] && makeblastdb -in #{pep_path} -dbtype 'prot' -
 puts 'Databases created'
 
 # 2. Create factories
-factory_pep = Bio::Blast.local('blastx', 'Databases/PEP', '-e 10e-6')
-factory_tair = Bio::Blast.local('tblastn', 'Databases/TAIR', '-e 10e-6')
+factory_pep = Bio::Blast.local('blastx', 'Databases/PEP', '-e 10e-6 -F ‘‘m S’’')
+factory_tair = Bio::Blast.local('tblastn', 'Databases/TAIR', '-e 10e-6 -F ‘‘m S’’')
 
 # 3. Load fasta files
 tair_file = Bio::FlatFile.auto(tair_path) # 35386 entries
 pep_file = Bio::FlatFile.auto(pep_path) # 5146 entries
 
-output = File.new('orthologs.txt', 'w')
-output.puts "PEP_id\tTAIR_id\tPEP>TAIR_evalue\tTAIR>PEP_evalue"
+output = File.new('orthologs.txt', 'w') # Output file
+output.puts "PEP_id\tTAIR_id\tPEP>TAIR_evalue\tPEP>TAIR_cover\tTAIR>PEP_evalue\tTAIR>PEP_cover"
 
 orthologs = Hash.new()
 # We will start with the pep entries, since there are less of them
 
 count = 0
 pep_file.each_entry() do |entry|
+  puts count
   count +=1
   break if count > 100
   report = factory_tair.query(entry) 
@@ -35,6 +36,9 @@ pep_file.each_entry() do |entry|
   
   #puts entry.definition, entry.entry_id, "#{report.hits.length} hits found"
   first_hit = report.hits[0]
+  coverage = (first_hit.query_end.to_f - first_hit.query_start.to_f)/first_hit.query_len.to_f
+  next if coverage < 0.5
+  
   #puts first_hit.evalue, first_hit.definition
   
   # Search the entry with the definition of the first hit
@@ -58,19 +62,21 @@ pep_file.each_entry() do |entry|
   report2 = factory_pep.query(hit)
   #puts "#{report2.hits.length} hits found"
   best_second_hit = report2.hits[0]
-  #puts best_second_hit.definition.split('|')[0]
+  coverage_back = (best_second_hit.query_end.to_f - best_second_hit.query_start.to_f)/best_second_hit.query_len.to_f
+  next if coverage_back < 0.5
   
   
   # Check if the hits are recyprocal
   if report2.hits[0].definition == entry.definition
     puts 'Found one!'
     orthologs[entry.entry_id] = hit.entry_id
-    output.puts "#{entry.entry_id}\t#{hit.entry_id}\t#{first_hit.evalue}\t#{best_second_hit.evalue}" 
+    output.puts "#{entry.entry_id}\t#{hit.entry_id}\t#{first_hit.evalue}\t#{coverage.round(3)}\t#{best_second_hit.evalue}\t#{coverage_back.round(3)}" 
   end
   #puts "\n"
 end
 
 puts orthologs
+puts orthologs.keys.length
 output.close
 
 
