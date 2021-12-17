@@ -29,13 +29,14 @@ count = 0
 pep_file.each_entry() do |entry|
   puts count
   count +=1
-  break if count > 100
+  #break if count > 100
   report = factory_tair.query(entry) 
   
   next unless report.hits.any? # Skip if it does not find matches
   
   #puts entry.definition, entry.entry_id, "#{report.hits.length} hits found"
   first_hit = report.hits[0]
+  next unless first_hit.respond_to? :query_end
   coverage = (first_hit.query_end.to_f - first_hit.query_start.to_f)/first_hit.query_len.to_f
   next if coverage < 0.5
   
@@ -62,6 +63,7 @@ pep_file.each_entry() do |entry|
   report2 = factory_pep.query(hit)
   #puts "#{report2.hits.length} hits found"
   best_second_hit = report2.hits[0]
+  next unless best_second_hit.respond_to? :query_end
   coverage_back = (best_second_hit.query_end.to_f - best_second_hit.query_start.to_f)/best_second_hit.query_len.to_f
   next if coverage_back < 0.5
   
