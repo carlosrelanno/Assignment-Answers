@@ -1,4 +1,4 @@
-### Gene ortholog finder
+# Gene ortholog finder
 This program finds the possible orthologs between two species. The E-value threshold (10e-6) and the filter (soft) were chosen according to previous literature (1). Also, only the alignments with a coverage greater than 50% were selected.
 
 ## Results
