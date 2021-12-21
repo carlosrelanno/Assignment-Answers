@@ -11,11 +11,11 @@ puts `[ ! -f Databases/TAIR.nin ] && makeblastdb -in #{tair_path} -dbtype 'nucl'
 puts `[ ! -f Databases/PEP.pin ] && makeblastdb -in #{pep_path} -dbtype 'prot' -out Databases/PEP`
 puts 'Databases created'
 
-# 2. Create factories
+# Create factories
 factory_pep = Bio::Blast.local('blastx', 'Databases/PEP', '-e 10e-6 -F ‘‘m S’’')
 factory_tair = Bio::Blast.local('tblastn', 'Databases/TAIR', '-e 10e-6 -F ‘‘m S’’')
 
-# 3. Load fasta files
+# Load fasta files
 tair_file = Bio::FlatFile.auto(tair_path) # 35386 entries
 pep_file = Bio::FlatFile.auto(pep_path) # 5146 entries
 
@@ -29,25 +29,20 @@ count = 0
 pep_file.each_entry() do |entry|
   puts count
   count +=1
-  #break if count > 100
   report = factory_tair.query(entry) 
   
   next unless report.hits.any? # Skip if it does not find matches
   
-  #puts entry.definition, entry.entry_id, "#{report.hits.length} hits found"
   first_hit = report.hits[0]
   next unless first_hit.respond_to? :query_end
   coverage = (first_hit.query_end.to_f - first_hit.query_start.to_f)/first_hit.query_len.to_f
   next if coverage < 0.5
-  
-  #puts first_hit.evalue, first_hit.definition
   
   # Search the entry with the definition of the first hit
   hit = nil
   tair_file.rewind() # Reset file pointer to the start of the flatfile
   tair_file.each_entry() do |entry2|
     if first_hit.definition.split('|')[0].rstrip == entry2.entry_id
-      #puts 'Best hit found in plant database'
       hit = entry2
       break
     end
@@ -63,7 +58,7 @@ pep_file.each_entry() do |entry|
   report2 = factory_pep.query(hit)
   #puts "#{report2.hits.length} hits found"
   best_second_hit = report2.hits[0]
-  next unless best_second_hit.respond_to? :query_end
+  next unless best_second_hit.respond_to? :query_end # Sometimes I got a 'nil class does not have this method' error
   coverage_back = (best_second_hit.query_end.to_f - best_second_hit.query_start.to_f)/best_second_hit.query_len.to_f
   next if coverage_back < 0.5
   
@@ -74,7 +69,6 @@ pep_file.each_entry() do |entry|
     orthologs[entry.entry_id] = hit.entry_id
     output.puts "#{entry.entry_id}\t#{hit.entry_id}\t#{first_hit.evalue}\t#{coverage.round(3)}\t#{best_second_hit.evalue}\t#{coverage_back.round(3)}" 
   end
-  #puts "\n"
 end
 
 puts orthologs
